@@ -3,6 +3,10 @@
 
   outputs = {...}: {
     templates = {
+      haskell = {
+        path = ./haskell;
+        description = "A simple Haskell development environment";
+      };
       typst = {
         path = ./typst;
         description = "A simple Typst environment with tdf";
