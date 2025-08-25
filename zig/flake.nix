@@ -7,7 +7,7 @@
         nixpkgs.follows = "nixpkgs";
       };
     };
-    zls-overlay.url = "github:zigtools/zls/0.14.0";
+    zls-overlay.url = "github:zigtools/zls/0.15.0";
     zon2nix = {
       url = "github:jcollie/zon2nix";
       inputs = {
@@ -32,7 +32,7 @@
   in {
     devShell = forAllSystems (
       system: pkgs: let
-        zig = zig-overlay.packages.${system}."0.14.1";
+        zig = zig-overlay.packages.${system}."0.15.1";
         zls = zls-overlay.packages.${system}.zls.overrideAttrs (old: {
           nativeBuildInputs = [zig];
         });
