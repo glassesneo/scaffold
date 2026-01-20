@@ -7,6 +7,10 @@
         path = ./minimal;
         description = "A minimal environment";
       };
+      moonbit = {
+        path = ./moonbit;
+        description = "A simple MoonBit development environment for aarch64-darwin";
+      };
       haskell = {
         path = ./haskell;
         description = "A simple Haskell development environment";
