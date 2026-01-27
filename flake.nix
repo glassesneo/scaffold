@@ -11,6 +11,10 @@
         path = ./moonbit;
         description = "A simple MoonBit development environment for aarch64-darwin";
       };
+      node = {
+        path = ./node;
+        description = "A simple Node.js development environment";
+      };
       haskell = {
         path = ./haskell;
         description = "A simple Haskell development environment";
