@@ -5,7 +5,6 @@
       url = "github:loqusion/typix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    flake-utils.url = "github:numtide/flake-utils";
     typst-packages = {
       url = "github:typst/packages";
       flake = false;
@@ -15,12 +14,16 @@
   outputs = inputs @ {
     nixpkgs,
     typix,
-    flake-utils,
     ...
-  }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = nixpkgs.legacyPackages.${system};
+  }: let
+    eachSystem = fn: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: fn system nixpkgs.legacyPackages.${system});
+    mkApp = drv: {
+      type = "app";
+      program = "${drv}/bin/${drv.pname or drv.name}";
+    };
+  in {
+    checks = eachSystem (
+      system: pkgs: let
         typixLib = typix.lib.${system};
 
         src = typixLib.cleanTypstSource ./.;
@@ -71,23 +74,106 @@
           }
         );
       in {
-        checks = {
-          inherit build-drv build-script watch-script;
+        inherit build-drv build-script watch-script;
+      }
+    );
+
+    packages = eachSystem (
+      system: pkgs: let
+        typixLib = typix.lib.${system};
+
+        src = typixLib.cleanTypstSource ./.;
+        typstPackagesSrc = pkgs.symlinkJoin {
+          name = "typst-packages-src";
+          paths = [
+            "${inputs.typst-packages}/packages"
+          ];
         };
-
-        packages.default = build-drv;
-
-        apps = rec {
-          default = watch;
-          build = flake-utils.lib.mkApp {
-            drv = build-script;
-          };
-          watch = flake-utils.lib.mkApp {
-            drv = watch-script;
-          };
+        typstPackagesCache = pkgs.stdenv.mkDerivation {
+          name = "typst-packages-cache";
+          src = typstPackagesSrc;
+          dontBuild = true;
+          installPhase = ''
+            mkdir -p "$out"
+            cp -LR --reflink=auto --no-preserve=mode -t "$out" "$src"/*
+          '';
         };
+        commonArgs = {
+          typstSource = "main.typ";
+          fontPaths = [
+            "${pkgs.udev-gothic}/share/fonts/udev-gothic"
+          ];
+          typstOpts = {};
+          virtualPaths = [];
+        };
+      in {
+        default = typixLib.buildTypstProject (
+          commonArgs
+          // {
+            inherit src;
+            XDG_CACHE_HOME = typstPackagesCache;
+          }
+        );
+      }
+    );
 
-        devShells.default = typixLib.devShell {
+    apps = eachSystem (
+      system: pkgs: let
+        typixLib = typix.lib.${system};
+
+        src = typixLib.cleanTypstSource ./.;
+        typstPackagesSrc = pkgs.symlinkJoin {
+          name = "typst-packages-src";
+          paths = [
+            "${inputs.typst-packages}/packages"
+          ];
+        };
+        typstPackagesCache = pkgs.stdenv.mkDerivation {
+          name = "typst-packages-cache";
+          src = typstPackagesSrc;
+          dontBuild = true;
+          installPhase = ''
+            mkdir -p "$out"
+            cp -LR --reflink=auto --no-preserve=mode -t "$out" "$src"/*
+          '';
+        };
+        commonArgs = {
+          typstSource = "main.typ";
+          fontPaths = [
+            "${pkgs.udev-gothic}/share/fonts/udev-gothic"
+          ];
+          typstOpts = {};
+          virtualPaths = [];
+        };
+        build-script = typixLib.buildTypstProjectLocal (
+          commonArgs
+          // {
+            inherit src;
+            XDG_CACHE_HOME = typstPackagesCache;
+          }
+        );
+        watch-script = typixLib.watchTypstProject commonArgs;
+      in rec {
+        default = watch;
+        build = mkApp build-script;
+        watch = mkApp watch-script;
+      }
+    );
+
+    devShells = eachSystem (
+      system: pkgs: let
+        typixLib = typix.lib.${system};
+        commonArgs = {
+          typstSource = "main.typ";
+          fontPaths = [
+            "${pkgs.udev-gothic}/share/fonts/udev-gothic"
+          ];
+          typstOpts = {};
+          virtualPaths = [];
+        };
+        watch-script = typixLib.watchTypstProject commonArgs;
+      in {
+        default = typixLib.devShell {
           inherit (commonArgs) fontPaths virtualPaths;
           packages = [
             pkgs.tinymist
@@ -101,4 +187,5 @@
         };
       }
     );
+  };
 }
