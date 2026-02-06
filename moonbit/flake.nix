@@ -1,44 +1,26 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    moonbit-overlay = {
+      url = "github:glassesneo/moonbit-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = {nixpkgs, ...}: let
-    system = "aarch64-darwin";
-    pkgs = import nixpkgs {inherit system;};
-
-    moonbit = pkgs.stdenvNoCC.mkDerivation {
-      pname = "moonbit";
-      version = "latest";
-
-      src = pkgs.fetchzip {
-        url = "https://cli.moonbitlang.com/binaries/latest/moonbit-darwin-aarch64.tar.gz";
-        sha256 = "sha256-aW8nfLXSHv3kIhkBuO9dkMkdetjeX603hiyqiDum7BA=";
-        stripRoot = false;
-      };
-
-      installPhase = ''
-        mkdir -p $out
-        cp -R . $out/
-        if [ -d $out/bin ]; then
-          chmod +x $out/bin/*
-        fi
-      '';
-
-      meta = {
-        description = "MoonBit language toolchain";
-        homepage = "https://www.moonbitlang.com";
-        platforms = ["aarch64-darwin"];
-      };
-    };
+  outputs = {
+    nixpkgs,
+    moonbit-overlay,
+    ...
+  }: let
+    eachSystem = fn: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: fn system nixpkgs.legacyPackages.${system});
   in {
-    packages.${system} = {
-      moonbit = moonbit;
-      default = moonbit;
-    };
-
-    devShells.${system}.default = pkgs.mkShell {
-      packages = [moonbit];
-    };
+    devShell = eachSystem (
+      system: pkgs:
+        pkgs.mkShell {
+          packages = [
+            moonbit-overlay.packages.${system}.default
+          ];
+        }
+    );
   };
 }
