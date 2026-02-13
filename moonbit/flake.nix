@@ -6,7 +6,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     moonbit-overlay = {
-      url = "github:glassesneo/moonbit-overlay";
+      url = "github:glassesneo/moonbit-overlay/stable";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     moonbit-agent-guide = {
