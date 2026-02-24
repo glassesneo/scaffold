@@ -9,7 +9,7 @@
       };
       moonbit = {
         path = ./moonbit;
-        description = "A simple MoonBit development environment for aarch64-darwin";
+        description = "A simple MoonBit development environment";
       };
       gcc = {
         path = ./gcc;
