@@ -15,6 +15,10 @@
         path = ./gcc;
         description = "A simple GCC development environment";
       };
+      go = {
+        path = ./go;
+        description = "A simple Go development environment";
+      };
       node = {
         path = ./node;
         description = "A simple Node.js development environment";
