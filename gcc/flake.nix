@@ -1,6 +1,8 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    systems.url = "github:nix-systems/default";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     zig-overlay = {
       url = "github:mitchellh/zig-overlay";
       inputs = {
@@ -9,31 +11,43 @@
     };
   };
 
-  outputs = {
+  outputs = inputs @ {
+    self,
+    systems,
     nixpkgs,
+    flake-parts,
     zig-overlay,
     ...
-  }: let
-    eachSystem = fn: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: fn system nixpkgs.legacyPackages.${system});
-  in {
-    devShell = eachSystem (
-      system: pkgs: let
-        zig = zig-overlay.packages.${system}."0.15.1";
-      in
-        pkgs.mkShell {
-          packages =
-            [zig]
-            ++ (with pkgs; [
-              gcc
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} (top: {
+      imports = [];
+      systems = import systems;
+      perSystem = {
+        pkgs,
+        system,
+        ...
+      }: let
+        zig = zig-overlay.packages.${system}."0.15.2";
+      in {
+        devShells = {
+          default = pkgs.mkShellNoCC {
+            packages =
+              [
+                zig
+              ]
+              ++ (with pkgs; [
+                gcc
+                vscode-extensions.vadimcn.vscode-lldb.adapter
 
-              # LSP & static analysis
-              clang-tools # clangd, clang-tidy, clang-format
+                # LSP & static analysis
+                clang-tools # clangd, clang-tidy, clang-format
 
-              # Build helpers
-              gnumake
-              bear
-            ]);
-        }
-    );
-  };
+                # Build helpers
+                gnumake
+                bear
+              ]);
+          };
+        };
+      };
+    });
 }

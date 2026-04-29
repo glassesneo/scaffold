@@ -1,22 +1,43 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    systems.url = "github:nix-systems/default";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = {nixpkgs, ...}: let
-    eachSystem = fn: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: fn system nixpkgs.legacyPackages.${system});
-  in {
-    devShells = eachSystem (
-      system: pkgs: let
+  outputs = inputs @ {
+    self,
+    systems,
+    nixpkgs,
+    flake-parts,
+    ...
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} (top: {
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
+      systems = import systems;
+      perSystem = {pkgs, ...}: let
         ghc = pkgs.haskell.packages.ghc96.ghcWithPackages (hpkgs:
           with hpkgs; [
             haskell-language-server
             fourmolu
           ]);
-      in
-        pkgs.mkShell {
-          packages = [ghc];
-        }
-    );
-  };
+      in {
+        devShells = {
+          default = pkgs.mkShellNoCC {
+            packages = [
+              ghc
+            ];
+          };
+        };
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs = {
+            alejandra.enable = true;
+          };
+        };
+      };
+    });
 }

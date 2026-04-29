@@ -1,6 +1,9 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    systems.url = "github:nix-systems/default";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     skills-deployer = {
       url = "github:glassesneo/skills-deployer";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,37 +18,54 @@
     };
   };
 
-  outputs = {
+  outputs = inputs @ {
+    self,
+    systems,
     nixpkgs,
+    flake-parts,
     skills-deployer,
     moonbit-overlay,
     moonbit-agent-guide,
     ...
-  }: let
-    eachSystem = fn: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: fn system nixpkgs.legacyPackages.${system});
-  in {
-    apps = eachSystem (system: pkgs: {
-      deploy-skills = skills-deployer.lib.mkDeploySkills pkgs {
-        defaultMode = "symlink";
-        skills = let
-          mkMoonbitSkill = subdir: {
-            source = moonbit-agent-guide;
-            inherit subdir;
-            targetDirs = [".claude/skills" ".agents/skills"];
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} (top: {
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
+      systems = import systems;
+      perSystem = {
+        pkgs,
+        system,
+        ...
+      }: {
+        devShells = {
+          default = pkgs.mkShellNoCC {
+            packages = [
+              moonbit-overlay.packages.${system}.default
+            ];
           };
-        in {
-          moonbit-agent-guide = mkMoonbitSkill "moonbit-agent-guide";
-          moonbit-refactoring = mkMoonbitSkill "moonbit-refactoring";
+        };
+        apps = {
+          deploy-skills = skills-deployer.lib.mkDeploySkills pkgs {
+            defaultMode = "symlink";
+            skills = let
+              mkMoonbitSkill = subdir: {
+                source = moonbit-agent-guide;
+                inherit subdir;
+                targetDirs = [".claude/skills" ".agents/skills"];
+              };
+            in {
+              moonbit-agent-guide = mkMoonbitSkill "moonbit-agent-guide";
+              moonbit-refactoring = mkMoonbitSkill "moonbit-refactoring";
+            };
+          };
+        };
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs = {
+            alejandra.enable = true;
+          };
         };
       };
     });
-    devShell = eachSystem (
-      system: pkgs:
-        pkgs.mkShell {
-          packages = [
-            moonbit-overlay.packages.${system}.default
-          ];
-        }
-    );
-  };
 }

@@ -1,21 +1,39 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    systems.url = "github:nix-systems/default";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = {nixpkgs, ...}: let
-    eachSystem = fn: nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (system: fn system nixpkgs.legacyPackages.${system});
-  in {
-    devShell = eachSystem (
-      system: pkgs:
-        pkgs.mkShell {
-          packages = [
-            pkgs.nodejs
-            pkgs.corepack
-            pkgs.nodePackages.typescript
-            pkgs.nodePackages.typescript-language-server
-          ];
-        }
-    );
-  };
+  outputs = inputs @ {
+    self,
+    systems,
+    nixpkgs,
+    flake-parts,
+    ...
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} (top: {
+      imports = [
+        inputs.treefmt-nix.flakeModule
+      ];
+      systems = import systems;
+      perSystem = {pkgs, ...}: {
+        devShells = {
+          default = pkgs.mkShellNoCC {
+            packages = with pkgs; [
+              nodejs
+              nodePackages.pnpm
+              typescript-language-server
+            ];
+          };
+        };
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs = {
+            alejandra.enable = true;
+          };
+        };
+      };
+    });
 }
