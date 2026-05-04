@@ -53,10 +53,6 @@
             path = ./swift;
             description = "A simple Swift development environment";
           };
-          typst = {
-            path = ./typst;
-            description = "A simple Typst environment with tdf";
-          };
           zig = {
             path = ./zig;
             description = "A simple Zig development environment";
