@@ -7,9 +7,16 @@
       url = "github:mitchellh/zig-overlay";
       inputs = {
         nixpkgs.follows = "nixpkgs";
+        systems.follows = "systems";
       };
     };
-    zls-overlay.url = "github:zigtools/zls/0.15.0";
+    zls-overlay = {
+      url = "github:zigtools/zls/0.15.0";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        zig-overlay.follows = "zig-overlay";
+      };
+    };
   };
 
   outputs = inputs @ {
