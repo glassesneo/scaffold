@@ -44,16 +44,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1770552104,
-        "narHash": "sha256-PwtEC4/Un/SOpZKf0pMzw9jBVaoFLwESMZQ63Y3Z5rQ=",
-        "owner": "glassesneo",
+        "lastModified": 1778651571,
+        "narHash": "sha256-s1EfvrJEqnz5+MI9+XTiOhcDUoO40BeaNG+prVsRr5M=",
+        "owner": "moonbit-community",
         "repo": "moonbit-overlay",
-        "rev": "4d7a553d08537bb49eb6a90edbc733a09f755599",
+        "rev": "b12e1ab1f4f966c6a75c8949fdde94eac5e59287",
         "type": "github"
       },
       "original": {
-        "owner": "glassesneo",
-        "ref": "stable",
+        "owner": "moonbit-community",
         "repo": "moonbit-overlay",
         "type": "github"
       }

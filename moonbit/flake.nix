@@ -12,7 +12,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     moonbit-overlay = {
-      url = "github:glassesneo/moonbit-overlay/stable";
+      url = "github:moonbit-community/moonbit-overlay";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         treefmt-nix.follows = "treefmt-nix";
