@@ -11,7 +11,7 @@
       };
     };
     zls-overlay = {
-      url = "github:zigtools/zls/0.15.0";
+      url = "github:zigtools/zls/0.16.0";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         zig-overlay.follows = "zig-overlay";
@@ -36,7 +36,7 @@
         system,
         ...
       }: let
-        zig = zig-overlay.packages.${system}."0.15.2";
+        zig = zig-overlay.packages.${system}."0.16.0";
         zls = zls-overlay.packages.${system}.zls.overrideAttrs (old: {
           nativeBuildInputs = [zig];
         });
