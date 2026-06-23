@@ -31,8 +31,8 @@
         version = "0.1.0";
         src = lib.cleanSource ./.;
 
-        nodejs = pkgs.nodejs_26;
-        pnpm = pkgs.pnpm_11;
+        nodejs = pkgs.nodejs_25;
+        pnpm = pkgs.pnpm_10;
         pnpmDeps = pkgs.fetchPnpmDeps {
           inherit pname version src;
           fetcherVersion = 4;
